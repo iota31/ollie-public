@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+venv/
+audit/
+bearer.token
+config.json

@@ -1,0 +1,30 @@
+# lab-base — the clean slate every POC container starts from.
+# Light on purpose: POCs install their own deps INSIDE their container;
+# ephemerality keeps that clean, layer cache keeps it fast.
+# Rebuild: lab rebuild-base   (also monthly via ollie-lab-base-rebuild.timer)
+FROM docker.io/library/ubuntu:24.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update -qq && apt-get install -y -qq --no-install-recommends \
+        ca-certificates curl git jq ripgrep unzip \
+        build-essential pkg-config \
+        python3 python3-venv python3-pip \
+        nodejs npm \
+    && rm -rf /var/lib/apt/lists/*
+
+# uv — fast python env/dep manager for POCs
+RUN curl -LsSf https://astral.sh/uv/install.sh | env UV_INSTALL_DIR=/usr/local/bin sh
+
+# aider — the coding harness that drives POCs autonomously inside the
+# container (Ollie sets the goal, aider grinds). Model/key arrive as env
+# vars at spawn time (lab CLI injects them) — NEVER baked into the image.
+# World-readable install dirs: the runtime user is `work`, not root.
+RUN UV_TOOL_DIR=/opt/uv-tools UV_TOOL_BIN_DIR=/usr/local/bin \
+    uv tool install --python python3.12 aider-chat \
+    && chmod -R a+rX /opt/uv-tools \
+    && aider --version
+
+# Non-root worker; /work is the POC's whole world, /work/OUT gets harvested.
+RUN useradd -m -s /bin/bash work && mkdir -p /work/OUT && chown -R work:work /work
+USER work
+WORKDIR /work

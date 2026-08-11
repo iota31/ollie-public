@@ -1,0 +1,9 @@
+[Unit]
+Description=Reap stale lab containers hourly
+
+[Timer]
+OnCalendar=*:45
+Persistent=false
+
+[Install]
+WantedBy=timers.target

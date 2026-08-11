@@ -1,0 +1,49 @@
+{
+  "domains": [
+    "4DPocket — personal knowledge capture and recall",
+    "ongateway — LLM gateway, routing, inference orchestration",
+    "Ollie — autonomous personal AI agent infrastructure",
+    "AI fact-checking and claim verification",
+    "on-device AI, local LLMs, edge inference",
+    "on-device text-to-speech and speech-to-text",
+    "agent infrastructure, runtimes, and orchestration frameworks",
+    "LLM tooling, evals, and developer ergonomics",
+    "Model Context Protocol (MCP) servers and clients",
+    "prompt injection and AI/LLM security",
+    "autonomous agents and computer-use agents"
+  ],
+  "keywords_boost": [
+    "local LLM",
+    "llama.cpp",
+    "ONNX",
+    "quantization",
+    "fastembed",
+    "embeddings",
+    "retrieval augmented generation",
+    "speculative decoding",
+    "TTS",
+    "STT",
+    "whisper",
+    "MCP server",
+    "tool calling",
+    "agent eval",
+    "prompt injection",
+    "jailbreak",
+    "guardrail",
+    "function calling",
+    "vector search",
+    "fine-tuning",
+    "inference latency",
+    "stealth browser automation",
+    "Camoufox"
+  ],
+  "anti_interests": [
+    "crypto token shilling and price pumps",
+    "NFT drops and mints",
+    "generic startup fundraising fluff",
+    "growth-hacking and engagement-farming spam",
+    "get-rich-quick and dropshipping",
+    "celebrity gossip and influencer drama"
+  ],
+  "updated_at": "2026-06-14T00:00:00"
+}

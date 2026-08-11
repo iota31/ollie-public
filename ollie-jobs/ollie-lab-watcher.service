@@ -1,0 +1,9 @@
+[Unit]
+Description=Ollie lab watcher (poll Tushar's 4DPocket saves into the lab inbox)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 /home/openclaw/bin/lab_watcher.py
+Environment=HOME=/home/openclaw

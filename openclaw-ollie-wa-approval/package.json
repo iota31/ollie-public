@@ -1,0 +1,38 @@
+{
+  "name": "@ollie/openclaw-wa-approval",
+  "version": "0.1.0",
+  "description": "OpenClaw plugin: HARD first-contact WhatsApp approval gate for Ollie. Owner approves unknowns on Telegram before Ollie processes inbound or sends outbound.",
+  "type": "module",
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js"
+  },
+  "files": [
+    "index.js",
+    "openclaw.plugin.json",
+    "README.md"
+  ],
+  "scripts": {
+    "test": "node --test test/*.test.js"
+  },
+  "keywords": [
+    "openclaw",
+    "openclaw-plugin",
+    "whatsapp",
+    "approval",
+    "telegram"
+  ],
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "peerDependencies": {
+    "openclaw": ">=2026.5.28"
+  },
+  "license": "UNLICENSED",
+  "private": true,
+  "openclaw": {
+    "extensions": [
+      "./index.js"
+    ]
+  }
+}

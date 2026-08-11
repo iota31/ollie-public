@@ -1,0 +1,18 @@
+[Unit]
+Description=Ollie Curiosity Engine — control dashboard (Tailscale-only, port 3400)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+ExecStart=/usr/bin/python3 /home/openclaw/bin/research_dashboard.py
+Restart=always
+RestartSec=10
+Environment=HOME=/home/openclaw
+Environment=OLLIE_HOME=/home/openclaw
+Environment=PATH=/home/openclaw/.local/bin:/home/openclaw/bin:/usr/local/bin:/usr/bin:/bin
+# Tailscale bind and port — override here to change without editing code
+Environment=OLLIE_DASHBOARD_HOST=0.0.0.0
+Environment=OLLIE_DASHBOARD_PORT=3400
+
+[Install]
+WantedBy=default.target

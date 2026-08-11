@@ -1,0 +1,11 @@
+{
+  "_comment": "Pronunciation lexicon for Ollie's voice. Keys are replaced (whole-word, case-sensitive first then case-insensitive) with phonetic respellings before TTS. Extend whenever Ollie mispronounces something.",
+  "Tushar": "Too-shaar",
+  "Prakersh": "Pruh-kairsh",
+  "Manipur": "Munny-poor",
+  "onllm": "on L L M",
+  "onLLM": "on L L M",
+  "Ollie": "Olly",
+  "4DPocket": "Four-Dee Pocket",
+  "WhatsApp": "Whats App"
+}

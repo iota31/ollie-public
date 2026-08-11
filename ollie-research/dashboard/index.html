@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ollie · Curiosity Engine</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0f1117;--panel:#181c27;--border:#252a3a;--accent:#4f8ef7;
+  --danger:#e05555;--ok:#3db87a;--muted:#6b7280;--text:#d1d5db;
+  --text2:#9ca3af;--input:#1e2233;--btn:#252d40;--btn-h:#2e3a55;
+  --tag:#1e3a5f;--tag-t:#6baef5;
+}
+body{background:var(--bg);color:var(--text);font:14px/1.5 'Menlo','Consolas',monospace;min-height:100vh}
+header{background:var(--panel);border-bottom:1px solid var(--border);padding:10px 20px;display:flex;align-items:center;gap:16px}
+header h1{font-size:15px;letter-spacing:.05em;color:#fff}header h1 span{color:var(--accent)}
+.hdr-right{margin-left:auto;display:flex;align-items:center;gap:10px;font-size:12px;color:var(--muted)}
+#budget-mini{max-width:320px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+nav{display:flex;gap:2px;padding:12px 20px 0;border-bottom:1px solid var(--border);background:var(--bg)}
+.tab{padding:6px 14px;cursor:pointer;border-radius:4px 4px 0 0;border:1px solid transparent;border-bottom:none;
+     color:var(--muted);font-size:13px;user-select:none;transition:color .15s}
+.tab:hover{color:var(--text)}
+.tab.active{background:var(--panel);border-color:var(--border);color:#fff;margin-bottom:-1px;z-index:1}
+main{padding:20px;max-width:1200px}
+.panel{display:none;background:var(--panel);border:1px solid var(--border);border-radius:6px;overflow:hidden}
+.panel.active{display:block}
+.panel-hdr{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;
+           background:rgba(255,255,255,.02)}
+.panel-hdr h2{font-size:13px;color:#fff;letter-spacing:.04em}
+.panel-hdr .count{background:var(--tag);color:var(--tag-t);border-radius:10px;padding:1px 8px;font-size:11px}
+.panel-body{padding:16px}
+
+/* tables */
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;color:var(--muted);font-weight:normal;padding:6px 10px;border-bottom:1px solid var(--border);
+   font-size:11px;letter-spacing:.05em;text-transform:uppercase}
+td{padding:7px 10px;border-bottom:1px solid rgba(255,255,255,.04);vertical-align:top}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(255,255,255,.02)}
+
+/* tags */
+.tag{display:inline-block;background:var(--tag);color:var(--tag-t);border-radius:3px;padding:1px 6px;font-size:11px;margin:1px 2px}
+
+/* inputs / buttons */
+input,textarea,select{background:var(--input);border:1px solid var(--border);color:var(--text);
+  border-radius:4px;padding:5px 9px;font:inherit;width:100%;outline:none}
+input:focus,textarea:focus,select:focus{border-color:var(--accent)}
+textarea{resize:vertical;min-height:80px}
+.btn{background:var(--btn);color:var(--text);border:1px solid var(--border);border-radius:4px;padding:4px 12px;
+     cursor:pointer;font:inherit;font-size:13px;transition:background .15s}
+.btn:hover{background:var(--btn-h)}
+.btn-sm{padding:2px 8px;font-size:12px}
+.btn-danger{background:#2e1515;border-color:#6b3030;color:#e07070}
+.btn-danger:hover{background:#3d1a1a}
+.btn-ok{background:#0f2e1e;border-color:#1f5e3a;color:var(--ok)}
+.btn-ok:hover{background:#143d28}
+.btn-accent{background:#12225c;border-color:#2b4db0;color:#7fb3ff}
+.btn-accent:hover{background:#182e7a}
+toggle{display:inline-block;width:34px;height:18px;border-radius:9px;cursor:pointer;
+       position:relative;background:#333;transition:background .2s}
+toggle.on{background:var(--ok)}
+toggle::after{content:'';position:absolute;top:2px;left:2px;width:14px;height:14px;
+              border-radius:50%;background:#fff;transition:left .2s}
+toggle.on::after{left:16px}
+
+/* form grid */
+.form-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px;margin-top:8px}
+.form-row label{font-size:11px;color:var(--muted);display:flex;flex-direction:column;gap:3px}
+.form-actions{margin-top:10px;display:flex;gap:8px}
+
+/* interests */
+.interests-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+.interests-grid label{font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:6px}
+.interests-grid label span{font-size:11px;color:var(--muted)}
+
+/* queue */
+.q-row{display:grid;grid-template-columns:28px 1fr 80px 72px 72px 72px 90px 36px;
+       gap:6px;align-items:center;padding:6px 10px;border-bottom:1px solid rgba(255,255,255,.04);
+       cursor:grab;transition:background .1s}
+.q-row:hover{background:rgba(255,255,255,.03)}
+.q-row.dragging{opacity:.4;background:rgba(79,142,247,.08)}
+.q-row.drag-over{background:rgba(79,142,247,.15)}
+.q-hdr{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;
+       display:grid;grid-template-columns:28px 1fr 80px 72px 72px 72px 90px 36px;
+       gap:6px;padding:6px 10px;border-bottom:1px solid var(--border)}
+.drag-handle{color:var(--muted);font-size:16px;cursor:grab;user-select:none;text-align:center}
+.score-bar{height:4px;border-radius:2px;background:var(--accent);margin-top:3px;max-width:100%}
+.status-badge{display:inline-block;border-radius:3px;padding:1px 6px;font-size:11px}
+.status-badge.pending{background:#1e2a1e;color:#4fa}
+.status-badge.muted{background:#2a1e1e;color:#a44}
+.status-badge.read{background:#1e1e2a;color:#66f}
+
+/* budget */
+.budget-block{font-size:12px;line-height:1.8}
+.budget-block pre{background:var(--input);border:1px solid var(--border);border-radius:4px;
+  padding:10px;overflow-x:auto;white-space:pre-wrap;font-size:12px;color:var(--text2);
+  max-height:300px;overflow-y:auto}
+.budget-block h3{color:var(--muted);font-size:11px;letter-spacing:.05em;text-transform:uppercase;
+  margin:12px 0 6px}
+
+/* utils */
+.flex{display:flex;gap:8px;align-items:center}
+.mt8{margin-top:8px}
+.err{color:var(--danger);font-size:12px;margin-top:6px}
+.ok{color:var(--ok);font-size:12px;margin-top:6px}
+.muted{color:var(--muted)}
+.spin{display:inline-block;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+#toast{position:fixed;bottom:20px;right:20px;background:#1e2233;border:1px solid var(--border);
+  border-radius:6px;padding:10px 16px;font-size:13px;z-index:999;display:none;max-width:340px}
+#token-modal{position:fixed;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:center;
+  justify-content:center;z-index:100}
+#token-box{background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:28px;
+  width:400px;max-width:95vw}
+#token-box h2{margin-bottom:8px;font-size:15px;color:#fff}
+#token-box p{color:var(--text2);font-size:12px;margin-bottom:16px}
+</style>
+</head>
+<body>
+
+<div id="token-modal">
+  <div id="token-box">
+    <h2>Ollie · Curiosity Engine</h2>
+    <p>Enter the bearer token from<br><code>~/.openclaw/secrets/research-dashboard-token</code></p>
+    <input type="password" id="token-input" placeholder="paste token here" autocomplete="off">
+    <div class="form-actions mt8">
+      <button class="btn btn-accent" onclick="saveToken()">Connect</button>
+    </div>
+    <div id="token-err" class="err"></div>
+  </div>
+</div>
+
+<header>
+  <h1><span>●</span> Curiosity Engine</h1>
+  <div class="hdr-right">
+    <span id="budget-mini" class="muted">loading budget…</span>
+    <button class="btn btn-sm" onclick="logout()">change token</button>
+  </div>
+</header>
+
+<nav>
+  <div class="tab active" onclick="switchTab('sources',this)">Sources</div>
+  <div class="tab" onclick="switchTab('interests',this)">Interests</div>
+  <div class="tab" onclick="switchTab('queue',this)">Queue</div>
+  <div class="tab" onclick="switchTab('budget',this)">Budget</div>
+</nav>
+
+<main>
+
+<!-- SOURCES PANEL -->
+<div id="panel-sources" class="panel active">
+  <div class="panel-hdr">
+    <h2>SOURCES</h2>
+    <span id="src-count" class="count">0</span>
+    <button class="btn btn-sm btn-ok" onclick="toggleAddForm()" style="margin-left:auto">+ Add source</button>
+  </div>
+  <div class="panel-body">
+    <div id="add-form" style="display:none;background:var(--input);border:1px solid var(--border);
+         border-radius:4px;padding:14px;margin-bottom:14px">
+      <div style="font-size:12px;color:var(--muted);margin-bottom:8px">NEW SOURCE</div>
+      <div class="form-row">
+        <label>Type *
+          <select id="f-type">
+            <option>rss</option><option>reddit</option><option>blog</option>
+            <option>discovery</option><option>instagram</option><option>x</option>
+          </select>
+        </label>
+        <label>Target (URL / handle / query) *
+          <input id="f-target" placeholder="https://... or r/subreddit or @handle">
+        </label>
+        <label>Domain tags (comma-sep)
+          <input id="f-tags" placeholder="ai,ml,tools">
+        </label>
+        <label>Weight
+          <input id="f-weight" type="number" step="0.1" min="0.1" max="10" value="1.0">
+        </label>
+        <label>Recency days
+          <input id="f-recency" type="number" min="1" max="365" value="7">
+        </label>
+        <label>Enabled
+          <select id="f-enabled"><option value="true">yes</option><option value="false">no</option></select>
+        </label>
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-ok" onclick="addSource()">Add</button>
+        <button class="btn" onclick="toggleAddForm()">Cancel</button>
+      </div>
+      <div id="add-err" class="err"></div>
+    </div>
+    <table id="src-table">
+      <thead><tr>
+        <th>ID</th><th>Type</th><th>Target</th><th>Tags</th>
+        <th>Weight</th><th>Recency</th><th>Enabled</th><th></th>
+      </tr></thead>
+      <tbody id="src-body"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- INTERESTS PANEL -->
+<div id="panel-interests" class="panel">
+  <div class="panel-hdr"><h2>INTERESTS PROFILE</h2></div>
+  <div class="panel-body">
+    <p style="font-size:12px;color:var(--muted);margin-bottom:14px">
+      One item per line. The relevance gate uses these to score incoming items.
+    </p>
+    <div class="interests-grid">
+      <label>Domains <span>(one per line)</span>
+        <textarea id="i-domains" rows="10" placeholder="ai&#10;machine-learning&#10;developer-tools"></textarea>
+      </label>
+      <label>Keywords boost <span>(one per line)</span>
+        <textarea id="i-keywords" rows="10" placeholder="embedding&#10;fine-tuning&#10;latency"></textarea>
+      </label>
+      <label>Anti-interests <span>(one per line — drop these)</span>
+        <textarea id="i-anti" rows="10" placeholder="crypto&#10;sports&#10;celebrity"></textarea>
+      </label>
+    </div>
+    <div class="form-actions mt8">
+      <button class="btn btn-ok" onclick="saveInterests()">Save interests</button>
+      <span id="int-msg"></span>
+    </div>
+  </div>
+</div>
+
+<!-- QUEUE PANEL -->
+<div id="panel-queue" class="panel">
+  <div class="panel-hdr">
+    <h2>PRIORITY QUEUE</h2>
+    <span id="q-count" class="count">0</span>
+    <span style="margin-left:auto;font-size:11px;color:var(--muted)">drag rows to reorder · click save after</span>
+    <button class="btn btn-sm btn-accent" onclick="saveQueueOrder()" style="margin-left:8px">Save order</button>
+    <span id="q-order-msg" style="font-size:12px;margin-left:8px"></span>
+  </div>
+  <div class="panel-body" style="padding:0">
+    <div class="q-hdr">
+      <div></div><div>Title / URL</div><div>Source</div>
+      <div>Relevance</div><div>Recency</div><div>Score</div><div>Status</div><div></div>
+    </div>
+    <div id="q-body"></div>
+  </div>
+</div>
+
+<!-- BUDGET PANEL -->
+<div id="panel-budget" class="panel">
+  <div class="panel-hdr"><h2>BUDGET &amp; SPEND</h2></div>
+  <div class="panel-body">
+    <div class="budget-block">
+      <h3>Today's counts vs ceilings</h3>
+      <pre id="b-status">loading…</pre>
+      <h3>Recent Firecrawl credit log (last 20 lines)</h3>
+      <pre id="b-log">—</pre>
+    </div>
+    <div class="form-actions mt8">
+      <button class="btn btn-sm" onclick="loadBudget()">Refresh</button>
+    </div>
+  </div>
+</div>
+
+</main>
+
+<div id="toast"></div>
+
+<script>
+// ── Token management ──────────────────────────────────────────────────────
+let TOKEN = localStorage.getItem('ce_token') || '';
+const modal = document.getElementById('token-modal');
+if (TOKEN) { modal.style.display = 'none'; init(); }
+else        { modal.style.display = 'flex'; }
+
+function saveToken() {
+  const t = document.getElementById('token-input').value.trim();
+  if (!t) { document.getElementById('token-err').textContent = 'Token required'; return; }
+  TOKEN = t;
+  localStorage.setItem('ce_token', t);
+  modal.style.display = 'none';
+  init();
+}
+document.getElementById('token-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') saveToken();
+});
+function logout() {
+  localStorage.removeItem('ce_token');
+  TOKEN = '';
+  modal.style.display = 'flex';
+  document.getElementById('token-input').value = '';
+}
+
+// ── API helpers ───────────────────────────────────────────────────────────
+async function api(method, path, body) {
+  const opts = {
+    method,
+    headers: { 'Authorization': 'Bearer ' + TOKEN, 'Content-Type': 'application/json' }
+  };
+  if (body !== undefined) opts.body = JSON.stringify(body);
+  const r = await fetch(path, opts);
+  if (r.status === 401) { logout(); throw new Error('401'); }
+  const data = await r.json().catch(() => null);
+  if (!r.ok) throw new Error((data && data.error) || r.statusText);
+  return data;
+}
+
+function toast(msg, ok=true) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.style.borderColor = ok ? 'var(--ok)' : 'var(--danger)';
+  el.style.display = 'block';
+  clearTimeout(el._t);
+  el._t = setTimeout(() => { el.style.display = 'none'; }, 3000);
+}
+
+// ── Init / tab switch ─────────────────────────────────────────────────────
+function init() { loadSources(); loadInterests(); loadQueue(); loadBudget(); }
+
+function switchTab(name, el) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('panel-' + name).classList.add('active');
+  if (name === 'budget') loadBudget();
+}
+
+// ── Sources ───────────────────────────────────────────────────────────────
+let sources = [];
+
+async function loadSources() {
+  try {
+    sources = await api('GET', '/api/sources');
+    renderSources();
+  } catch(e) { toast('Sources: ' + e.message, false); }
+}
+
+function renderSources() {
+  document.getElementById('src-count').textContent = sources.length;
+  const tbody = document.getElementById('src-body');
+  tbody.innerHTML = '';
+  sources.forEach(s => {
+    const tr = document.createElement('tr');
+    const tagsHtml = (s.domain_tags || []).map(t => `<span class="tag">${esc(t)}</span>`).join('');
+    tr.innerHTML = `
+      <td style="font-size:11px;color:var(--muted)">${esc(s.id)}</td>
+      <td><span class="tag">${esc(s.type)}</span></td>
+      <td style="max-width:260px;word-break:break-all;font-size:12px">${esc(s.target)}</td>
+      <td>${tagsHtml||'<span class="muted">—</span>'}</td>
+      <td><input type="number" step="0.1" min="0.1" max="10" value="${s.weight}"
+           style="width:60px" onchange="patchSource('${esc(s.id)}','weight',+this.value)"></td>
+      <td><input type="number" min="1" max="365" value="${s.recency_days}"
+           style="width:60px" onchange="patchSource('${esc(s.id)}','recency_days',+this.value)"></td>
+      <td><toggle class="${s.enabled?'on':''}" onclick="toggleEnabled('${esc(s.id)}',this)"></toggle></td>
+      <td><button class="btn btn-sm btn-danger" onclick="deleteSource('${esc(s.id)}')">del</button></td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function toggleAddForm() {
+  const f = document.getElementById('add-form');
+  f.style.display = f.style.display === 'none' ? 'block' : 'none';
+}
+
+async function addSource() {
+  const errEl = document.getElementById('add-err');
+  errEl.textContent = '';
+  const tags = document.getElementById('f-tags').value.split(',').map(t=>t.trim()).filter(Boolean);
+  const body = {
+    type: document.getElementById('f-type').value,
+    target: document.getElementById('f-target').value.trim(),
+    domain_tags: tags,
+    weight: parseFloat(document.getElementById('f-weight').value) || 1,
+    recency_days: parseInt(document.getElementById('f-recency').value) || 7,
+    enabled: document.getElementById('f-enabled').value === 'true'
+  };
+  if (!body.target) { errEl.textContent = 'Target required'; return; }
+  try {
+    await api('POST', '/api/sources', body);
+    toast('Source added');
+    toggleAddForm();
+    loadSources();
+  } catch(e) { errEl.textContent = e.message; }
+}
+
+async function patchSource(id, field, value) {
+  try {
+    await api('PUT', '/api/sources/' + id, {[field]: value});
+    toast('Saved');
+  } catch(e) { toast(e.message, false); loadSources(); }
+}
+
+async function toggleEnabled(id, el) {
+  const current = el.classList.contains('on');
+  const next = !current;
+  el.classList.toggle('on', next);
+  try {
+    await api('PUT', '/api/sources/' + id, {enabled: next});
+    const s = sources.find(x => x.id === id);
+    if (s) s.enabled = next;
+  } catch(e) { el.classList.toggle('on', current); toast(e.message, false); }
+}
+
+async function deleteSource(id) {
+  if (!confirm('Delete source ' + id + '?')) return;
+  try {
+    await api('DELETE', '/api/sources/' + id);
+    toast('Deleted');
+    loadSources();
+  } catch(e) { toast(e.message, false); }
+}
+
+// ── Interests ─────────────────────────────────────────────────────────────
+async function loadInterests() {
+  try {
+    const d = await api('GET', '/api/interests');
+    document.getElementById('i-domains').value  = (d.domains||[]).join('\n');
+    document.getElementById('i-keywords').value = (d.keywords_boost||[]).join('\n');
+    document.getElementById('i-anti').value     = (d.anti_interests||[]).join('\n');
+  } catch(e) { toast('Interests: ' + e.message, false); }
+}
+
+async function saveInterests() {
+  const parse = id => document.getElementById(id).value.split('\n').map(s=>s.trim()).filter(Boolean);
+  const body = {
+    domains:        parse('i-domains'),
+    keywords_boost: parse('i-keywords'),
+    anti_interests: parse('i-anti')
+  };
+  const msg = document.getElementById('int-msg');
+  try {
+    await api('PUT', '/api/interests', body);
+    msg.textContent = '✓ saved'; msg.style.color = 'var(--ok)';
+    setTimeout(() => { msg.textContent = ''; }, 2000);
+  } catch(e) { msg.textContent = e.message; msg.style.color = 'var(--danger)'; }
+}
+
+// ── Queue ─────────────────────────────────────────────────────────────────
+let queue = [];
+let dragSrc = null;
+
+async function loadQueue() {
+  try {
+    queue = await api('GET', '/api/queue');
+    renderQueue();
+  } catch(e) { toast('Queue: ' + e.message, false); }
+}
+
+function renderQueue() {
+  document.getElementById('q-count').textContent = queue.length;
+  const body = document.getElementById('q-body');
+  body.innerHTML = '';
+  const sorted = [...queue].sort((a,b) => {
+    const pa = a.manual_priority ?? 9999;
+    const pb = b.manual_priority ?? 9999;
+    if (pa !== pb) return pa - pb;
+    return (b.score || 0) - (a.score || 0);
+  });
+  sorted.forEach(item => {
+    const row = document.createElement('div');
+    row.className = 'q-row';
+    row.draggable = true;
+    row.dataset.fp = item.fingerprint;
+    const score = (item.score || 0).toFixed(3);
+    const rel   = ((item.relevance || 0) * 100).toFixed(0);
+    const rec   = ((item.recency_factor || 0) * 100).toFixed(0);
+    const status = item.status || 'pending';
+    const statusBadge = `<span class="status-badge ${status}">${esc(status)}</span>`;
+    const title = item.title || item.url || item.fingerprint;
+    const prio = item.manual_priority !== null && item.manual_priority !== undefined
+      ? `<span class="tag">#${item.manual_priority}</span>` : '';
+    row.innerHTML = `
+      <div class="drag-handle">⠿</div>
+      <div style="font-size:12px;overflow:hidden">
+        ${prio}<span style="color:#bbb">${esc(title.substring(0,80))}</span>
+        <div style="font-size:10px;color:var(--muted);margin-top:1px">${esc((item.url||'').substring(0,60))}</div>
+      </div>
+      <div style="font-size:11px;color:var(--muted)">${esc(item.source_id||'')}</div>
+      <div>${rel}%<div class="score-bar" style="width:${rel}%"></div></div>
+      <div>${rec}%</div>
+      <div style="font-weight:600;color:var(--accent)">${score}</div>
+      <div>${statusBadge}
+        <button class="btn btn-sm" style="margin-top:3px;font-size:10px"
+          onclick="muteItem('${esc(item.fingerprint)}')">mute</button>
+      </div>
+      <div><button class="btn btn-sm btn-danger" onclick="removeQueueItem('${esc(item.fingerprint)}')">✕</button></div>
+    `;
+    // drag events
+    row.addEventListener('dragstart', e => {
+      dragSrc = row;
+      row.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+    });
+    row.addEventListener('dragend', () => row.classList.remove('dragging'));
+    row.addEventListener('dragover', e => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      document.querySelectorAll('.q-row').forEach(r => r.classList.remove('drag-over'));
+      row.classList.add('drag-over');
+    });
+    row.addEventListener('dragleave', () => row.classList.remove('drag-over'));
+    row.addEventListener('drop', e => {
+      e.preventDefault();
+      row.classList.remove('drag-over');
+      if (dragSrc && dragSrc !== row) {
+        const parent = row.parentNode;
+        const rows = [...parent.querySelectorAll('.q-row')];
+        const srcIdx = rows.indexOf(dragSrc);
+        const tgtIdx = rows.indexOf(row);
+        if (srcIdx < tgtIdx) parent.insertBefore(dragSrc, row.nextSibling);
+        else parent.insertBefore(dragSrc, row);
+      }
+    });
+    body.appendChild(row);
+  });
+}
+
+async function saveQueueOrder() {
+  const rows = document.querySelectorAll('#q-body .q-row');
+  const fps = [...rows].map(r => r.dataset.fp).filter(Boolean);
+  const msg = document.getElementById('q-order-msg');
+  try {
+    await api('POST', '/api/queue/reorder', fps);
+    msg.textContent = '✓ saved'; msg.style.color = 'var(--ok)';
+    setTimeout(() => { msg.textContent = ''; }, 2000);
+    await loadQueue();
+  } catch(e) { msg.textContent = e.message; msg.style.color = 'var(--danger)'; }
+}
+
+async function muteItem(fp) {
+  try {
+    await api('PUT', '/api/queue/' + fp, {status: 'muted'});
+    toast('Muted');
+    loadQueue();
+  } catch(e) { toast(e.message, false); }
+}
+
+async function removeQueueItem(fp) {
+  try {
+    await api('DELETE', '/api/queue/' + fp);
+    toast('Removed from queue');
+    loadQueue();
+  } catch(e) { toast(e.message, false); }
+}
+
+// ── Budget ────────────────────────────────────────────────────────────────
+async function loadBudget() {
+  try {
+    const d = await api('GET', '/api/budget');
+    document.getElementById('b-status').textContent = d.status || '—';
+    document.getElementById('b-log').textContent =
+      (d.spend_tail && d.spend_tail.length) ? d.spend_tail.join('\n') : '(no entries yet)';
+    document.getElementById('budget-mini').textContent =
+      (d.status || '').replace(/\s+/g, ' ').substring(0, 80);
+  } catch(e) { /* budget errors are non-fatal */ }
+}
+
+// ── Util ──────────────────────────────────────────────────────────────────
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+                  .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+</script>
+</body>
+</html>

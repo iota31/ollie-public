@@ -1,0 +1,13 @@
+[Unit]
+Description=Ollie watchdog (health + quota monitoring, Telegram alerts)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+ExecStart=/usr/bin/python3 /home/openclaw/bin/ollie_watchdog.py
+Restart=always
+RestartSec=30
+Environment=HOME=/home/openclaw
+
+[Install]
+WantedBy=default.target

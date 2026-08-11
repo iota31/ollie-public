@@ -1,0 +1,41 @@
+{
+  "id": "ollie-hands-approval",
+  "activation": {
+    "onStartup": false
+  },
+  "enabledByDefault": false,
+  "name": "Ollie Hands Approval Relay",
+  "description": "Relays the owner's Telegram 'approve <code>' / 'deny <code>' replies to the ollie-hands engine's /consent endpoint, closing the loop on confirm-tier (acts-as-Tushar / destructive / browser-commit) actions. Pre-LLM and integrity-preserving: the brain cannot forge or suppress an approval.",
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "enabled": {
+        "type": "boolean",
+        "default": false,
+        "description": "Master switch. When false the plugin loads but the hook is a no-op."
+      },
+      "ownerTelegramChatId": {
+        "type": "string",
+        "default": "<OWNER_TELEGRAM_CHAT_ID>",
+        "description": "Telegram chat id whose 'approve/deny <code>' replies are honored. Only this id can approve."
+      },
+      "consentUrl": {
+        "type": "string",
+        "default": "http://<TAILSCALE_IP>:3200/consent",
+        "description": "The ollie-hands engine /consent endpoint (host Tailscale IP, reachable from WSL)."
+      },
+      "bearerToken": {
+        "type": "string",
+        "default": "",
+        "description": "Bearer token for /consent. If empty, the plugin reuses the bearer already configured for the `hands` MCP server (no duplicated secret)."
+      }
+    }
+  },
+  "uiHints": {
+    "enabled": {
+      "label": "Relay enabled",
+      "help": "When false, this plugin is inert. Flip true after the ollie-hands engine + `hands` MCP server are live."
+    }
+  }
+}

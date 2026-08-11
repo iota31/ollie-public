@@ -1,0 +1,11 @@
+mcp>=1.9
+uvicorn>=0.30
+mss>=9.0
+uiautomation>=2.0.20 ; sys_platform == 'win32'
+comtypes>=1.2 ; sys_platform == 'win32'
+# This pair is qualified together by tests/test_browser_camoufox_integration.py.
+# Do not loosen independently: Camoufox's package metadata does not constrain
+# Playwright even though the two communicate over Firefox's private protocol.
+camoufox==0.4.11
+playwright==1.60.0
+requests>=2.31

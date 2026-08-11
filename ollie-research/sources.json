@@ -1,0 +1,112 @@
+[
+  {
+    "id": "rss-simonwillison",
+    "type": "rss",
+    "target": "https://simonwillison.net/atom/everything/",
+    "domain_tags": ["LLM tooling", "local LLM", "agent infrastructure", "prompt injection"],
+    "weight": 1.5,
+    "enabled": true,
+    "recency_days": 14,
+    "added_at": "2026-06-14T00:00:00"
+  },
+  {
+    "id": "rss-huggingface-blog",
+    "type": "rss",
+    "target": "https://huggingface.co/blog/feed.xml",
+    "domain_tags": ["on-device AI", "embeddings", "TTS", "STT", "fine-tuning"],
+    "weight": 1.2,
+    "enabled": true,
+    "recency_days": 21,
+    "added_at": "2026-06-14T00:00:00"
+  },
+  {
+    "id": "rss-anthropic-news",
+    "type": "rss",
+    "target": "https://www.anthropic.com/rss.xml",
+    "domain_tags": ["LLM tooling", "agent infrastructure", "AI security"],
+    "weight": 1.3,
+    "enabled": true,
+    "recency_days": 21,
+    "added_at": "2026-06-14T00:00:00"
+  },
+  {
+    "id": "reddit-localllama",
+    "type": "reddit",
+    "target": "LocalLLaMA",
+    "domain_tags": ["local LLM", "on-device AI", "quantization", "inference latency"],
+    "weight": 1.4,
+    "enabled": true,
+    "recency_days": 7,
+    "added_at": "2026-06-14T00:00:00"
+  },
+  {
+    "id": "reddit-machinelearning",
+    "type": "reddit",
+    "target": "MachineLearning",
+    "domain_tags": ["LLM tooling", "embeddings", "agent infrastructure"],
+    "weight": 1.0,
+    "enabled": true,
+    "recency_days": 10,
+    "added_at": "2026-06-14T00:00:00"
+  },
+  {
+    "id": "reddit-llmdevs",
+    "type": "reddit",
+    "target": "LLMDevs",
+    "domain_tags": ["LLM tooling", "MCP", "tool calling", "agent infrastructure"],
+    "weight": 1.0,
+    "enabled": true,
+    "recency_days": 10,
+    "added_at": "2026-06-14T00:00:00"
+  },
+  {
+    "id": "discovery-ondevice-tts",
+    "type": "discovery",
+    "target": "on-device TTS open source latest",
+    "domain_tags": ["on-device TTS", "STT", "on-device AI"],
+    "weight": 1.1,
+    "enabled": true,
+    "recency_days": 14,
+    "added_at": "2026-06-14T00:00:00"
+  },
+  {
+    "id": "discovery-mcp-servers",
+    "type": "discovery",
+    "target": "new Model Context Protocol MCP server release",
+    "domain_tags": ["MCP", "agent infrastructure", "LLM tooling"],
+    "weight": 1.1,
+    "enabled": true,
+    "recency_days": 14,
+    "added_at": "2026-06-14T00:00:00"
+  },
+  {
+    "id": "discovery-prompt-injection",
+    "type": "discovery",
+    "target": "prompt injection LLM agent security research",
+    "domain_tags": ["prompt injection", "AI security", "autonomous agents"],
+    "weight": 1.2,
+    "enabled": true,
+    "recency_days": 21,
+    "added_at": "2026-06-14T00:00:00"
+  },
+  {
+    "id": "x-simonw",
+    "type": "x",
+    "target": "https://x.com/simonw",
+    "domain_tags": ["LLM tooling", "local LLM", "agent infrastructure"],
+    "weight": 1.0,
+    "enabled": false,
+    "recency_days": 7,
+    "added_at": "2026-06-14T00:00:00"
+  },
+  {
+    "id": "ig-placeholder",
+    "type": "instagram",
+    "target": "https://www.instagram.com/explore/tags/localllm/",
+    "domain_tags": ["on-device AI"],
+    "weight": 0.8,
+    "enabled": false,
+    "recency_days": 7,
+    "added_at": "2026-06-14T00:00:00"
+  }
+]

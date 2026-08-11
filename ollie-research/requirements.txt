@@ -1,0 +1,14 @@
+# ollie-research shared venv — the ONLY two heavy deps for the Curiosity Engine.
+# Installed into /home/openclaw/ollie-research/.venv by setup-venv.sh (uv).
+# Box has NO docker/podman and a stdlib-only system python; this dedicated uv
+# venv is the only install route (see Plans/curious-foraging-magpie.md RECON).
+#
+# Both deps SHARE this one venv: crawl4ai (extraction) + fastembed (the
+# relevance gate's local embeddings — BAAI/bge-small-en-v1.5, ONNX, no torch).
+
+# Extraction client — AsyncWebCrawler, enable_stealth, fit_markdown.
+# 0.7.x is the line carrying enable_stealth / UndetectedAdapter.
+crawl4ai>=0.7.0,<0.8.0
+
+# Local embeddings for the gate (ONNX, ~100MB, no torch). Same venv on purpose.
+fastembed>=0.4.0,<0.6.0

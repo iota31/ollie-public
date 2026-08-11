@@ -1,0 +1,14 @@
+[Unit]
+Description=Poll Ollie's curiosity sources into the research queue every 2h
+
+[Timer]
+# Every 2h on the odd hours at :20 — offset off the existing fleet (heartbeat
+# :00/:30, lab-watcher :15, lab-reaper :45, project-tick :30) so the curiosity
+# poll never collides with another timer fire. RandomizedDelaySec spreads it
+# further.
+OnCalendar=*-*-* 01/2:20:00
+RandomizedDelaySec=180
+Persistent=false
+
+[Install]
+WantedBy=timers.target

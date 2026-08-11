@@ -1,0 +1,16 @@
+[Unit]
+Description=Ollie background jobs runner
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+ExecStart=/usr/bin/python3 /home/openclaw/bin/ollie_jobs_runner.py
+Restart=always
+RestartSec=10
+Environment=HOME=/home/openclaw
+Environment=PATH=/home/openclaw/.openclaw/tools/node-v22.22.0/bin:/home/openclaw/.local/bin:/home/openclaw/bin:/usr/local/bin:/usr/bin:/bin
+
+Environment=BRAVE_API_KEY=<BRAVE_API_KEY:see-secrets.local.md>
+
+[Install]
+WantedBy=default.target

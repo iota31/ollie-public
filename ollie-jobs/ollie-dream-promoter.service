@@ -1,0 +1,12 @@
+[Unit]
+Description=Ollie dream promoter (promote staged dreaming candidates into MEMORY.md)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+# Rollout: starts in --dry-run (logs would-promote to dream-promoter.log, writes
+# nothing). After a few nights of sane logs, drop --dry-run to go live.
+ExecStart=/usr/bin/python3 /home/openclaw/bin/ollie_dream_promoter.py --dry-run
+Environment=HOME=/home/openclaw
+Environment=PATH=/home/openclaw/.openclaw/tools/node-v22.22.0/bin:/home/openclaw/.local/bin:/home/openclaw/bin:/usr/local/bin:/usr/bin:/bin

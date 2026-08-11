@@ -1,0 +1,16 @@
+[Unit]
+Description=Ollie curiosity engine — one research-queue poll cycle
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+# Runs under the ollie-research VENV python so the gate gets real fastembed
+# embeddings and crawl4ai works; the stdlib pollers run fine under it too.
+# --dry-run for staged rollout (like dream-promoter): the cycle still polls,
+# gates, scores and writes queue.json, but dispatch() only PRINTS what it would
+# submit — no research jobs are spent. Flip to live by removing --dry-run after
+# clean cycles.
+ExecStart=/home/openclaw/ollie-research/.venv/bin/python /home/openclaw/bin/research_queue.py --dry-run
+Environment=HOME=/home/openclaw
+Environment=PATH=/home/openclaw/.openclaw/tools/node-v22.22.0/bin:/home/openclaw/.local/bin:/home/openclaw/bin:/usr/local/bin:/usr/bin:/bin

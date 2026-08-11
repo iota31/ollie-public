@@ -1,0 +1,7 @@
+[Unit]
+Description=Ollie lab reaper (kill POC containers >6h old, prune)
+
+[Service]
+Type=oneshot
+ExecStart=/home/openclaw/bin/lab reap
+Environment=HOME=/home/openclaw

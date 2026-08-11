@@ -1,0 +1,10 @@
+[Unit]
+Description=Project work sessions every 2h during the day (07:30-23:30 box time)
+
+[Timer]
+OnCalendar=*-*-* 07..23/2:30:00
+RandomizedDelaySec=120
+Persistent=false
+
+[Install]
+WantedBy=timers.target

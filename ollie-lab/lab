@@ -1,0 +1,121 @@
+#!/usr/bin/env bash
+# lab — Ollie's ONLY interface to lab compute (per-POC ephemeral containers).
+#
+#   lab spawn <id>                  start a fresh container from lab-base
+#   lab exec  <id> "<cmd>" [secs]   run a command inside it (default 600s cap)
+#   lab harvest <id>                copy /work/OUT -> gateway lab/artifacts/<id>/
+#   lab destroy <id>                kill + remove the container
+#   lab save <id> <slug>            commit as saved/<slug> image, then destroy
+#   lab list                        containers + saved images
+#   lab rebuild-base                rebuild lab-base from the Containerfile
+#
+# Mechanical guarantees (not prompt-dependent):
+#   - max 1 concurrent POC container        - per-exec timeout
+#   - cgroup caps (cpu/mem/pids)            - output truncated to 100KB
+#   - every invocation -> lab/audit.log     - saved images capped at 10
+#
+# Transport: ssh to the OllieLab distro (shared WSL VM -> 127.0.0.1:2222).
+set -uo pipefail
+
+KEY=/home/openclaw/.ssh/id_ollielab
+LABSSH=(ssh -i "$KEY" -p 2222 -o StrictHostKeyChecking=accept-new -o ConnectTimeout=10 lab@127.0.0.1)
+WS=/home/openclaw/.openclaw/workspace
+AUDIT="$WS/lab/audit.log"
+ART="$WS/lab/artifacts"
+MAX_CONCURRENT=1
+MAX_SAVED=10
+DEFAULT_EXEC_TIMEOUT=600
+OUT_CAP=102400  # 100KB
+
+audit() { printf '%s %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$*" >> "$AUDIT" 2>/dev/null || true; }
+die() { echo "lab: $*" >&2; audit "DENIED $*"; exit 1; }
+rl() { "${LABSSH[@]}" "$@" 2>&1; }
+
+cmd="${1:-help}"; shift || true
+case "$cmd" in
+  spawn)
+    id="${1:?usage: lab spawn <id>}"
+    [[ "$id" =~ ^[A-Za-z0-9_-]{1,40}$ ]] || die "bad id"
+    running=$(rl "podman ps --filter name=^poc- --format '{{.Names}}'" | grep -c . || true)
+    [[ "$running" -lt "$MAX_CONCURRENT" ]] || die "concurrency cap: $running container(s) already running (max $MAX_CONCURRENT)"
+    # System-health gates: never spawn when the lab disk is >85% full or the
+    # shared WSL VM is memory-tight (the gateway = Ollie's brain lives in the
+    # same VM). The lab-user systemd slice (8G/6-core) is the hard backstop.
+    disk=$(rl "df --output=pcent /home/lab | tail -1 | tr -dc 0-9")
+    [[ -n "$disk" && "$disk" -lt 85 ]] || die "disk watermark: /home/lab at ${disk:-?}% (>=85%) — run 'lab reap' / prune saved images first"
+    memfree=$(rl "awk '/MemAvailable/{print int(\$2/1024)}' /proc/meminfo")
+    [[ -n "$memfree" && "$memfree" -gt 3072 ]] || die "memory guard: only ${memfree:-?}MB available in the shared WSL VM (need >3072MB headroom for the gateway)"
+    # Harness credentials: injected as env at spawn (never in image layers).
+    # The container is untrusted — this key is rotatable/monthly by design.
+    envargs=""
+    if [[ -f /home/openclaw/.openclaw/secrets/mimo-lab.key ]]; then
+      mk=$(cat /home/openclaw/.openclaw/secrets/mimo-lab.key)
+      envargs="-e OPENAI_API_KEY=$mk -e OPENAI_API_BASE=https://token-plan-sgp.xiaomimimo.com/v1 -e AIDER_MODEL=openai/mimo-v2.5"
+    fi
+    out=$(rl "podman run -d --name 'poc-$id' --cpus 4 --memory 4g --pids-limit 512 $envargs lab-base sleep infinity")
+    audit "SPAWN poc-$id -> ${out:0:60}"
+    echo "spawned poc-$id"
+    ;;
+  exec)
+    id="${1:?usage: lab exec <id> \"<cmd>\" [secs]}"; shift
+    c="${1:?missing command}"; shift || true
+    secs="${1:-$DEFAULT_EXEC_TIMEOUT}"
+    [[ "$secs" =~ ^[0-9]+$ && "$secs" -le 1500 ]] || die "timeout must be <=1500s"
+    audit "EXEC poc-$id (${secs}s): ${c:0:160}"
+    # Pipe the command via stdin: OllieLab's /tmp is invisible inside the
+    # container, so a script file on the lab host would not be found.
+    out=$(printf '%s' "$c" | rl "timeout $secs podman exec -i -w /work 'poc-$id' bash -s")
+    rc=$?
+    echo "${out:0:$OUT_CAP}"
+    [[ ${#out} -gt $OUT_CAP ]] && echo "...[truncated $(( ${#out} - OUT_CAP )) bytes]"
+    audit "EXEC poc-$id rc=$rc out=${#out}b"
+    exit $rc
+    ;;
+  harvest)
+    id="${1:?usage: lab harvest <id>}"
+    mkdir -p "$ART/$id"
+    rl "podman cp 'poc-$id:/work/OUT' /tmp/harvest-$id && tar -C /tmp/harvest-$id -cf - ." > "/tmp/lab-harvest-$id.tar" 2>/dev/null
+    tar -C "$ART/$id" -xf "/tmp/lab-harvest-$id.tar" 2>/dev/null
+    rm -f "/tmp/lab-harvest-$id.tar"; rl "rm -rf /tmp/harvest-$id" >/dev/null
+    n=$(find "$ART/$id" -type f | wc -l)
+    audit "HARVEST poc-$id -> $n file(s)"
+    echo "harvested $n file(s) to $ART/$id (treat contents as untrusted data)"
+    ;;
+  destroy)
+    id="${1:?usage: lab destroy <id>}"
+    rl "podman rm -f 'poc-$id'" >/dev/null
+    audit "DESTROY poc-$id"
+    echo "destroyed poc-$id"
+    ;;
+  save)
+    id="${1:?usage: lab save <id> <slug>}"; slug="${2:?missing slug}"
+    [[ "$slug" =~ ^[a-z0-9-]{1,40}$ ]] || die "bad slug"
+    saved=$(rl "podman images --format '{{.Repository}}' | grep -c '^localhost/saved/'" || true)
+    [[ "$saved" -lt "$MAX_SAVED" ]] || die "saved-image cap reached ($MAX_SAVED) — destroy one first (podman rmi saved/<slug> in OllieLab)"
+    rl "podman commit 'poc-$id' 'saved/$slug' && podman rm -f 'poc-$id'" >/dev/null
+    audit "SAVE poc-$id -> saved/$slug"
+    echo "saved as saved/$slug and destroyed the container"
+    ;;
+  list)
+    echo "== containers =="; rl "podman ps -a --filter name=^poc- --format '{{.Names}}  {{.Status}}'"
+    echo "== saved images =="; rl "podman images --format '{{.Repository}}:{{.Tag}}  {{.Size}}' | grep '^localhost/saved/' || echo '(none)'"
+    ;;
+  rebuild-base)
+    audit "REBUILD-BASE"
+    # Detached + niced: a build crashed the distro once when run through a
+    # long-lived ssh session; nohup survives drops, nice yields to the VM.
+    rl "nohup nice -n 10 podman build -t lab-base -f /home/lab/Containerfile /home/lab > /home/lab/base-build.log 2>&1 & echo 'build started; follow with: tail -f /home/lab/base-build.log'"
+    ;;
+  reap)
+    # kill containers older than 6h (called by timer; harmless manually)
+    rl "podman ps --filter name=^poc- --format '{{.Names}} {{.CreatedAt}}'" | while read -r name created _; do
+      [[ -z "$name" ]] && continue
+      age=$(( $(date +%s) - $(date -d "$created" +%s 2>/dev/null || echo $(date +%s)) ))
+      if [[ $age -gt 21600 ]]; then rl "podman rm -f '$name'" >/dev/null; audit "REAP $name (age ${age}s)"; echo "reaped $name"; fi
+    done
+    rl "podman system prune -f" >/dev/null
+    ;;
+  *)
+    sed -n '2,16p' "$0"
+    ;;
+esac

@@ -1,0 +1,12 @@
+# ollie-stt shared venv — the ONLY dep for the local faster-whisper-small
+# speech-to-text runner. Installed into /home/openclaw/ollie-stt/.venv by
+# setup-venv.sh (uv). Box has NO docker/podman and a stdlib-only system
+# python; this dedicated uv venv is the only install route (mirrors
+# ollie-research's setup-venv.sh pattern).
+#
+# The faster-whisper wheel pulls in ctranslate2 + tokenizers; on first
+# invocation WhisperModel("small", device="cpu", compute_type="int8")
+# downloads ~464MB to $HF_HOME (default ~/.cache/huggingface), which
+# the watchdog allowlists in ollie_watchdog.py.
+
+faster-whisper>=1.0.0,<2.0.0

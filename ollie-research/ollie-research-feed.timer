@@ -1,0 +1,15 @@
+[Unit]
+Description=Feed Ollie's discovery + curated RSS into 4DPocket every 2h (offset from the poll)
+
+[Timer]
+# Every 2h on the EVEN hours at :50 — deliberately OFFSET from the queue poll
+# (odd hours :20). The feeder pushes URLs/feeds into 4DPocket at e.g. 02:50;
+# 4DPocket extracts asynchronously; the poll reads them back out at 03:20 (~30
+# min later). :50 is also free of the rest of the fleet (heartbeat :00/:30,
+# lab-watcher :15, project-tick :30, lab-reaper :45, poll :20).
+OnCalendar=*-*-* 00/2:50:00
+RandomizedDelaySec=180
+Persistent=false
+
+[Install]
+WantedBy=timers.target

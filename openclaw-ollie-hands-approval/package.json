@@ -1,0 +1,35 @@
+{
+  "name": "@ollie/openclaw-hands-approval",
+  "version": "0.1.0",
+  "description": "OpenClaw plugin: relay owner Telegram approve/deny replies to the ollie-hands engine /consent endpoint (confirm-tier computer-use actions).",
+  "type": "module",
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js"
+  },
+  "files": [
+    "index.js",
+    "openclaw.plugin.json",
+    "README.md"
+  ],
+  "keywords": [
+    "openclaw",
+    "openclaw-plugin",
+    "telegram",
+    "approval",
+    "computer-use"
+  ],
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "peerDependencies": {
+    "openclaw": ">=2026.5.28"
+  },
+  "license": "UNLICENSED",
+  "private": true,
+  "openclaw": {
+    "extensions": [
+      "./index.js"
+    ]
+  }
+}

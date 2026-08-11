@@ -1,0 +1,10 @@
+[Unit]
+Description=Promote dreaming candidates daily at 03:30 box time (after the 03:00 sweep)
+
+[Timer]
+OnCalendar=*-*-* 03:30:00
+RandomizedDelaySec=120
+Persistent=false
+
+[Install]
+WantedBy=timers.target

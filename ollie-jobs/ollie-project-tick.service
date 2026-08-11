@@ -1,0 +1,10 @@
+[Unit]
+Description=Ollie project tick (one bounded work session for the top active project)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 /home/openclaw/bin/ollie_project_tick.py
+Environment=HOME=/home/openclaw
+Environment=PATH=/home/openclaw/.openclaw/tools/node-v22.22.0/bin:/home/openclaw/.local/bin:/home/openclaw/bin:/usr/local/bin:/usr/bin:/bin

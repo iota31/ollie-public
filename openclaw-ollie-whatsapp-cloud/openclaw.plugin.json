@@ -1,0 +1,53 @@
+{
+  "id": "ollie-whatsapp-cloud",
+  "activation": {
+    "onStartup": true
+  },
+  "enabledByDefault": true,
+  "name": "Ollie WhatsApp Cloud API Channel",
+  "description": "Inbound WhatsApp via the official Meta Cloud API (Graph v21.0). Registers /plugins/whatsapp-cloud/webhook on the gateway loopback HTTP server, handles the Meta verification handshake, validates X-Hub-Signature-256 HMAC, dedupes by message id, and (when enabled + secrets present) routes inbound text messages into Ollie as channel-id 'whatsapp-cloud' so the existing ollie-wa-approval before_agent_run gate fires. Outbound replies are sent via Graph API directly (no native channel adapter).",
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "enabled": {
+        "type": "boolean",
+        "default": false,
+        "description": "Master switch. When false, the plugin loads but the route handlers are no-ops (still return 200 fast so Meta does not retry). Flip to true after the secret file is in place and the gateway has been reloaded."
+      },
+      "secretFile": {
+        "type": "string",
+        "default": "~/.openclaw/secrets/whatsapp-cloud.json",
+        "description": "Path to the JSON file holding phoneNumberId, wabaId, accessToken, appSecret, verifyToken. Mode 600. Tilde is expanded at runtime."
+      },
+      "dedupeFile": {
+        "type": "string",
+        "default": "~/.openclaw/plugin-state/ollie-whatsapp-cloud/dedupe.json",
+        "description": "Persistent Set of message ids we have already processed. Atomic-rename writes. Tilde is expanded at runtime."
+      },
+      "logEveryInbound": {
+        "type": "boolean",
+        "default": true,
+        "description": "If true, log a one-line summary of every accepted inbound event at info level. If false, only log errors and dedupe hits."
+      }
+    }
+  },
+  "uiHints": {
+    "enabled": {
+      "label": "Channel enabled",
+      "help": "When false, the webhook route still mounts so the gateway boots cleanly, but the handler is a no-op that returns 200 quickly. Use this to stage the deploy before pointing ngrok/Meta at the box."
+    },
+    "secretFile": {
+      "label": "Secret file",
+      "help": "JSON file with {phoneNumberId, wabaId, accessToken, appSecret, verifyToken}. Must exist and be readable by the gateway user; mode 600 recommended."
+    },
+    "dedupeFile": {
+      "label": "Dedupe state file",
+      "description": "JSON file holding a Set of seen messages[].id values. Survives gateway restarts. The plugin trims the set to the most recent 5000 ids on each write."
+    },
+    "logEveryInbound": {
+      "label": "Log every inbound",
+      "help": "If false, only log errors. The default is true to make go-live debugging easier."
+    }
+  }
+}

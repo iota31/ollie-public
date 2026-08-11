@@ -1,0 +1,10 @@
+[Unit]
+Description=Poll 4DPocket saves hourly for Ollie's lab
+
+[Timer]
+OnCalendar=*:15
+RandomizedDelaySec=300
+Persistent=false
+
+[Install]
+WantedBy=timers.target

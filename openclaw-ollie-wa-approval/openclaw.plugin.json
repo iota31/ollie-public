@@ -1,0 +1,85 @@
+{
+  "id": "ollie-wa-approval",
+  "activation": {
+    "onStartup": false
+  },
+  "enabledByDefault": false,
+  "name": "Ollie Owner Approval Router",
+  "description": "HARD pre-LLM owner approval router for Hands consent and WhatsApp contact gating. Owner approve/deny interception stays active whenever the plugin is loaded; enabled only toggles WhatsApp contact gating. Contact (W-) decisions are Telegram-only in both directions; Hands (H-) decisions are also accepted from the owner's WhatsApp.",
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "enabled": {
+        "type": "boolean",
+        "default": false,
+        "description": "Controls WhatsApp contact gating only. When false, inbound/outbound WhatsApp contact gating and outbound cancellation are inert. Owner Telegram/WhatsApp text approve/deny interception and Telegram inline approval callbacks remain active whenever the plugin is loaded."
+      },
+      "ownerTelegramChatId": {
+        "type": "string",
+        "default": "<OWNER_TELEGRAM_CHAT_ID>",
+        "description": "Telegram chat id of the owner. Approval requests are sent here; replies are correlated from here."
+      },
+      "ownerWhatsAppNumber": {
+        "type": "string",
+        "default": "+<OWNER_PHONE>",
+        "description": "Owner E.164 WhatsApp number whose approve/deny replies are intercepted before the LLM. Hands (H-) refs only: WhatsApp contact gating (W-) can never be decided from WhatsApp."
+      },
+      "approvalsFile": {
+        "type": "string",
+        "default": "~/.openclaw/workspace/whatsapp-contacts.json",
+        "description": "Path to the JSON state file with {owner, approved[], blocked[], pending{}}. Tilde is expanded at runtime."
+      },
+      "requestTimeoutMinutes": {
+        "type": "number",
+        "default": 60,
+        "minimum": 1,
+        "maximum": 1440,
+        "description": "How long a pending approval request lives before it is auto-expired (for visibility only — expired requests are pruned; a later message from that number creates a fresh ref)."
+      },
+      "hookTimeoutMs": {
+        "type": "number",
+        "default": 5000,
+        "minimum": 1000,
+        "maximum": 30000,
+        "description": "Per-hook budget for the Telegram push + state write. Default 5000ms (override the OpenClaw default of 15000ms for before_agent_run)."
+      },
+      "handsConsentUrl": {
+        "type": "string",
+        "default": "http://<TAILSCALE_IP>:3200/consent",
+        "description": "The Hands owner-consent endpoint."
+      },
+      "handsApprovalToken": {
+        "type": "string",
+        "default": "",
+        "description": "Approval-only Hands credential from approval.token. Never use the MCP bearer token here."
+      }
+    }
+  },
+  "uiHints": {
+    "enabled": {
+      "label": "Gate enabled",
+      "help": "Controls WhatsApp contact gating only. When false, inbound/outbound WhatsApp contact gating and outbound cancellation are inert. Owner text approve/deny interception and Telegram callback routing remain active whenever the plugin is loaded."
+    },
+    "ownerTelegramChatId": {
+      "label": "Owner Telegram chat id",
+      "help": "The chat id that receives approval requests and whose replies correlate. Defaults to the live Ollie owner's id (<OWNER_TELEGRAM_CHAT_ID>)."
+    },
+    "ownerWhatsAppNumber": {
+      "label": "Owner WhatsApp number",
+      "help": "E.164 number authorized to approve or deny Hands (H-) actions from WhatsApp, because the owner's own message opens the 24h window. WhatsApp contact approvals (W-) are refused here and must be answered on Telegram. All other WhatsApp senders remain subject to the contact gate."
+    },
+    "approvalsFile": {
+      "label": "State file",
+      "help": "JSON file holding approved[]/blocked[]/pending{}. Default reuses the existing whatsapp-contacts.json created by the openclaw installer (compatible format)."
+    },
+    "requestTimeoutMinutes": {
+      "label": "Pending request timeout (minutes)",
+      "help": "Cosmetic. Pending requests older than this are pruned from the state file; a later message creates a fresh ref. No auto-approve."
+    },
+    "hookTimeoutMs": {
+      "label": "Hook timeout (ms)",
+      "help": "Per-hook budget. Telegram sends should be < 2s in practice; 5s is a generous ceiling."
+    }
+  }
+}

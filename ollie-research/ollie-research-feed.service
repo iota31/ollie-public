@@ -1,0 +1,23 @@
+[Unit]
+Description=Ollie curiosity engine — FEED 4DPocket (discovery push + RSS feed sync)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+# Runs under the ollie-research VENV python (Brave/Firecrawl are stdlib urllib,
+# but crawl4ai enrichment + the gate's fastembed need the venv).
+#
+# Two steps, in order:
+#   1. feed_discovery — run the discovery queries (Brave primary, Firecrawl
+#      escalation) and PUSH each found URL into 4DPocket's curiosity-feed.
+#   2. feeds_sync — idempotently register the curated RSS/Reddit sources as
+#      4DPocket feeds so 4DPocket polls + extracts them on its own schedule.
+#
+# This feeder is DECOUPLED from the queue reader (ollie-research-poll): it
+# pushes now, 4DPocket processes asynchronously, and the NEXT poll cycle reads
+# the items back out. The timer is OFFSET from the poll timer to allow that.
+ExecStart=/home/openclaw/ollie-research/.venv/bin/python /home/openclaw/bin/research_discovery.py
+ExecStart=/home/openclaw/ollie-research/.venv/bin/python /home/openclaw/bin/research_feeds_sync.py
+Environment=HOME=/home/openclaw
+Environment=PATH=/home/openclaw/.openclaw/tools/node-v22.22.0/bin:/home/openclaw/.local/bin:/home/openclaw/bin:/usr/local/bin:/usr/bin:/bin

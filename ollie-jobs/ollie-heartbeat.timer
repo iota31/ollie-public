@@ -1,0 +1,10 @@
+[Unit]
+Description=Fire an Ollie heartbeat every 30 minutes
+
+[Timer]
+OnCalendar=*:00/30
+RandomizedDelaySec=120
+Persistent=false
+
+[Install]
+WantedBy=timers.target

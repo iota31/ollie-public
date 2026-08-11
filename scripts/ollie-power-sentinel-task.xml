@@ -1,0 +1,68 @@
+<?xml version="1.0"?>
+<!-- OlliePowerSentinel — host-side battery bridge for the WSL gateway.
+     Register on the box with (no password needed, /xml path):
+       schtasks /create /tn OlliePowerSentinel /xml C:\Users\Source\ollie-power-sentinel-task.xml /f
+     Fires host-power-sentinel.ps1 every 5 minutes in the owner's interactive
+     session. Two triggers so it runs whether freshly logged on OR already
+     logged in at registration time:
+       - LogonTrigger      -> starts at next/already-current logon
+       - TimeTrigger       -> fires once at registration boundary, then repeats
+     Both carry a 5-minute indefinite repetition. Battery clauses are FALSE so
+     it keeps sampling precisely WHEN the laptop is on battery (the case we
+     care about). -->
+<Task version="1.4" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
+  <RegistrationInfo>
+    <Description>Samples Win32_Battery and writes power state into the WSL gateway workspace for Ollie's watchdog.</Description>
+    <URI>\OlliePowerSentinel</URI>
+  </RegistrationInfo>
+  <Triggers>
+    <LogonTrigger>
+      <Enabled>true</Enabled>
+      <UserId>S-1-5-21-3785125864-3283474876-1765532017-1001</UserId>
+      <Repetition>
+        <Interval>PT5M</Interval>
+        <StopAtDurationEnd>false</StopAtDurationEnd>
+      </Repetition>
+    </LogonTrigger>
+    <TimeTrigger>
+      <Enabled>true</Enabled>
+      <StartBoundary>2026-06-12T00:00:00</StartBoundary>
+      <Repetition>
+        <Interval>PT5M</Interval>
+        <StopAtDurationEnd>false</StopAtDurationEnd>
+      </Repetition>
+    </TimeTrigger>
+  </Triggers>
+  <Principals>
+    <Principal id="Author">
+      <UserId>S-1-5-21-3785125864-3283474876-1765532017-1001</UserId>
+      <LogonType>InteractiveToken</LogonType>
+      <RunLevel>LeastPrivilege</RunLevel>
+    </Principal>
+  </Principals>
+  <Settings>
+    <MultipleInstancesPolicy>IgnoreNew</MultipleInstancesPolicy>
+    <DisallowStartIfOnBatteries>false</DisallowStartIfOnBatteries>
+    <StopIfGoingOnBatteries>false</StopIfGoingOnBatteries>
+    <AllowHardTerminate>true</AllowHardTerminate>
+    <StartWhenAvailable>true</StartWhenAvailable>
+    <RunOnlyIfNetworkAvailable>false</RunOnlyIfNetworkAvailable>
+    <IdleSettings>
+      <StopOnIdleEnd>false</StopOnIdleEnd>
+      <RestartOnIdle>false</RestartOnIdle>
+    </IdleSettings>
+    <AllowStartOnDemand>true</AllowStartOnDemand>
+    <Enabled>true</Enabled>
+    <Hidden>false</Hidden>
+    <RunOnlyIfIdle>false</RunOnlyIfIdle>
+    <WakeToRun>false</WakeToRun>
+    <ExecutionTimeLimit>PT0S</ExecutionTimeLimit>
+    <Priority>7</Priority>
+  </Settings>
+  <Actions Context="Author">
+    <Exec>
+      <Command>powershell.exe</Command>
+      <Arguments>-NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File C:\Users\Source\host-power-sentinel.ps1</Arguments>
+    </Exec>
+  </Actions>
+</Task>
